@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             String                   @id @default(auto()) @map("_id") @db.ObjectId
+  slug           String                   @unique
+  title          String
+  mainImage      String
+  price          Int                      @default(0)
+  rating         Int                      @default(0)
+  description    String
+  manufacturer   String
+  inStock        Int                      @default(1)
+  categoryId     String?                  @db.ObjectId
+  category       Category?                @relation(fields: [categoryId], references: [id])
+  customerOrders customer_order_product[] @relation("ProductOrders")
+  Wishlist       Wishlist[]               @relation("ProductWishlist")
+}
+
+model Image {
+  imageID   String @id @default(auto()) @map("_id") @db.ObjectId
+  productID String @db.ObjectId
+  image     String
+}
+
+model User {
+  id       String     @id @default(auto()) @map("_id") @db.ObjectId
+  email    String     @unique
+  password String?
+  role     String?    @default("user")
+  Wishlist Wishlist[] @relation("UserWishlist")
+}
+
+model Customer_order {
+  id          String                   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  lastname    String
+  phone       String
+  email       String
+  company     String
+  adress      String
+  apartment   String
+  postalCode  String
+  dateTime    DateTime?                @default(now())
+  status      String
+  city        String
+  country     String
+  orderNotice String?
+  total       Int
+  products    customer_order_product[] @relation("OrderProducts")
+}
+
+model customer_order_product {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  customerOrderId String         @db.ObjectId
+  productID       String         @db.ObjectId
+  customerOrder   Customer_order @relation("OrderProducts", fields: [customerOrderId], references: [id])
+  product         Product        @relation("ProductOrders", fields: [productID], references: [id])
+  quantity        Int
+}
+
+model Category {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name     String    @unique
+  products Product[]
+}
+
+model Wishlist {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  productID String @db.ObjectId
+  userId    String @db.ObjectId
+
+  product Product @relation("ProductWishlist", fields: [productID], references: [id])
+  user    User    @relation("UserWishlist", fields: [userId], references: [id])
+}
